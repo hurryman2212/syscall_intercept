@@ -639,14 +639,14 @@ intercept_routine(struct context *context)
 	long result;
 	int forward_to_kernel = true;
 	struct syscall_desc desc;
-	struct patch_desc *patch = context->patch_desc;
+	// struct patch_desc *patch = context->patch_desc;
 
 	get_syscall_in_context(context, &desc);
 
-	if (handle_magic_syscalls(&desc, &result) == 0)
-		return (struct wrapper_ret){.rax = result, .rdx = 1 };
+	// if (handle_magic_syscalls(&desc, &result) == 0)
+	// return (struct wrapper_ret){.rax = result, .rdx = 1 };
 
-	intercept_log_syscall(patch, &desc, UNKNOWN, 0);
+	// intercept_log_syscall(patch, &desc, UNKNOWN, 0);
 
 	if (intercept_hook_point != NULL)
 		forward_to_kernel = intercept_hook_point(desc.nr,
@@ -692,7 +692,7 @@ intercept_routine(struct context *context)
 					desc.args[5]);
 	}
 
-	intercept_log_syscall(patch, &desc, KNOWN, result);
+	// intercept_log_syscall(patch, &desc, KNOWN, result);
 
 	return (struct wrapper_ret){ .rax = result, .rdx = 1 };
 }
