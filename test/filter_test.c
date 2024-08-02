@@ -65,7 +65,7 @@ hook(long syscall_number,
 }
 
 int
-main()
+main(void)
 {
 	intercept_hook_point = hook;
 

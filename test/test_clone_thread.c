@@ -57,7 +57,7 @@ t(void *arg)
 }
 
 int
-main()
+main(void)
 {
 	pthread_t thread;
 	pthread_attr_t attr;

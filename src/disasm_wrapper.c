@@ -63,8 +63,12 @@ struct intercept_disasm_context {
  * this regard i.e. providing capstone with nop implementation of vsnprintf.
  */
 static int
-nop_vsnprintf()
+nop_vsnprintf(char *a, unsigned long b, const char *c, va_list d)
 {
+	(void) a;
+	(void) b;
+	(void) c;
+	(void) d;
 	return 0;
 }
 
