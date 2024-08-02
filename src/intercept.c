@@ -321,6 +321,8 @@ is_vdso(uintptr_t addr, const char *path)
 	return addr == (uintptr_t)vdso_addr || strstr(path, "vdso") != NULL;
 }
 
+char *env_intercept_bypass_so;
+
 /*
  * should_patch_object
  * Decides whether a particular loaded object should should be targeted for
@@ -345,6 +347,7 @@ should_patch_object(uintptr_t addr, const char *path)
 	static const char libc[] = "libc";
 	static const char pthr[] = "libpthread";
 	static const char caps[] = "libcapstone";
+	static const char overlaysys[] = "liboverlaysys";
 
 	if (is_vdso(addr, path)) {
 		debug_dump(" - skipping: is_vdso\n");
@@ -365,6 +368,24 @@ should_patch_object(uintptr_t addr, const char *path)
 	if (str_match(name, len, caps)) {
 		debug_dump(" - skipping: matches capstone\n");
 		return false;
+	}
+
+	if (str_match(name, len, overlaysys)) {
+		debug_dump(" - skipping: matches overlaysys\n");
+		return false;
+	}
+
+	if (env_intercept_bypass_so) {
+		char *tmp = strdup(env_intercept_bypass_so);
+		const char *word = strtok(tmp, " ");
+		while (word) {
+			if (str_match(name, len, word)) {
+				debug_dump(" - skipping: matches %s\n", word);
+				return false;
+			}
+			word = strtok(NULL, " ");
+		}
+		free(tmp);
 	}
 
 	if (str_match(name, len, libc)) {
@@ -485,14 +506,15 @@ intercept(int argc, char **argv)
 	vdso_addr = (void *)(uintptr_t)getauxval(AT_SYSINFO_EHDR);
 	debug_dumps_on = getenv("INTERCEPT_DEBUG_DUMP") != NULL;
 	patch_all_objs = (getenv("INTERCEPT_ALL_OBJS") != NULL);
+	env_intercept_bypass_so = getenv("INTERCEPT_BYPASS_SO");
 	intercept_setup_log(getenv("INTERCEPT_LOG"),
 			getenv("INTERCEPT_LOG_TRUNC"));
 	log_header();
 	init_patcher();
 
 	dl_iterate_phdr(analyze_object, NULL);
-	if (!libc_found)
-		xabort("libc not found");
+	// if (!libc_found)
+	// xabort("libc not found");
 
 	for (unsigned i = 0; i < objs_count; ++i) {
 		if (objs[i].count > 0 && is_asm_wrapper_space_full())
