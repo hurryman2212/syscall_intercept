@@ -703,8 +703,17 @@ intercept_routine(struct context *context)
 #ifdef SYS_clone3
 			desc.nr == SYS_clone3 ||
 #endif
-			desc.nr == SYS_clone)
-		return (struct wrapper_ret){.rax = context->rax, .rdx = 2};
+			desc.nr == SYS_clone) {
+#ifndef NDEBUG
+			const uint64_t flags = desc.nr == SYS_clone3
+				? ((struct clone_args *)desc.args[0])->flags
+				: (uint64_t)desc.args[0];
+			if (flags & CLONE_VM)
+				assert(flags & CLONE_SETTLS);
+#endif
+			return (struct wrapper_ret){.rax = context->rax,
+				.rdx = 2};
+		}
 		else
 			result = syscall_no_intercept(desc.nr,
 					desc.args[0],
