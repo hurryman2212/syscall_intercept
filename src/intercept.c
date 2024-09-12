@@ -681,12 +681,13 @@ intercept_routine(struct context *context)
 		    desc.args[5],
 		    &result);
 
-	if (desc.nr == SYS_vfork || desc.nr == SYS_rt_sigreturn) {
-		/* can't handle these syscalls the normal way */
-		return (struct wrapper_ret){.rax = context->rax, .rdx = 0 };
-	}
-
 	if (forward_to_kernel) {
+		if (desc.nr == SYS_vfork || desc.nr == SYS_rt_sigreturn) {
+			/* can't handle these syscalls the normal way */
+			return (struct wrapper_ret){.rax = context->rax,
+				.rdx = 0};
+		}
+
 		/*
 		 * The clone syscall's arg1 is a pointer to a memory region
 		 * that serves as the stack space of a new child thread.
